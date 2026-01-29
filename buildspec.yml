@@ -1,17 +1,25 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      docker: 18
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 137568342949.dkr.ecr.us-east-1.amazonaws.com
+      
   build:
     commands:
       - echo Build started on `date`
+      - echo Building the Docker image...
       - docker build -t my-nodejs-app .
-      - docker images
+      
   post_build:
     commands:
       - echo Build completed on `date`
+      - echo Tagging and Pushing the Docker image...
       - docker tag my-nodejs-app:latest 137568342949.dkr.ecr.us-east-1.amazonaws.com/my-nodejs-app:latest
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 137568342949.dkr.ecr.us-east-1.amazonaws.com
       - docker push 137568342949.dkr.ecr.us-east-1.amazonaws.com/my-nodejs-app:latest
+
+artifacts:
+  files:
+    - appspec.yml
+    - scripts/**/*
